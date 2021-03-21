@@ -1,6 +1,9 @@
 Getting started
 ===============
 
-This is where you describe how to get set up on a clean install, including the
-commands necessary to get the raw data (using the `sync_data_from_s3` command,
-for example), and then how to make the cleaned, final data sets.
+prosocial-conversation-forecasting is a tool that forecasts prosocial conversation outcomes from early conversation signals.
+Refer to our paper `Conversations Gone Alright: Quantifying and Predicting
+Prosocial Outcomes in Online Conversations <https://arxiv.org/pdf/2102.08368.pdf>`_ for details.
+
+Detailed documentation is forthcoming.
+

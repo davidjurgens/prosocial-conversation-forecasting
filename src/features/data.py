@@ -190,44 +190,43 @@ def extract_fields(idx, comment, post):
     return fields
 
 
+def is_English(text, verbose=False):
+    """check if the string is in English
 
-# def is_English(text, verbose=False):
-#     """check if the string is in English
+    Args:
+        string (str): the string to be tested
+        verbose (bool, optional): verbose output. Defaults to False.
 
-#     Args:
-#         string (str): the string to be tested
-#         verbose (bool, optional): verbose output. Defaults to False.
+    Returns:
+        bool: return True if it is in English
+    """
+    thre = 0.8  # threshold for % of English
+    _, _, details, vectors = pycld2.detect(text, returnVectors=True)
+    languages, _, _, _ = list(zip(*details))
 
-#     Returns:
-#         bool: return True if it is in English
-#     """
-#     thre = 0.8  # threshold for % of English
-#     _, _, details, vectors = pycld2.detect(text, returnVectors=True)
-#     languages, _, _, _ = list(zip(*details))
+    # ok if only contains English
+    if set(languages) == {'ENGLISH'}:
+        return True
 
-#     # ok if only contains English
-#     if set(languages) == {'ENGLISH'}:
-#         return True
+    if not len(vectors):
+        return False
+    # calculate the length of each language
+    _, lengths, langs, _ = list(zip(*vectors))
 
-#     if not len(vectors):
-#         return False
-#     # calculate the length of each language
-#     _, lengths, langs, _ = list(zip(*vectors))
+    counts = collections.defaultdict(int)
+    for length, lang in zip(lengths, langs):
+        counts[lang] += length
 
-#     counts = collections.defaultdict(int)
-#     for length, lang in zip(lengths, langs):
-#         counts[lang] += length
-
-#     # calculate % of English
-#     total_length = sum(counts.values())
-#     percent_of_English = counts['ENGLISH'] / total_length
+    # calculate % of English
+    total_length = sum(counts.values())
+    percent_of_English = counts['ENGLISH'] / total_length
     
-#     if verbose:
-#         print(f'% of English: {percent_of_English}')
-#     if set(languages) == {'ENGLISH', 'Unknown'} and languages[0] == 'ENGLISH' and percent_of_English > thre:
-#         return True
+    if verbose:
+        print(f'% of English: {percent_of_English}')
+    if set(languages) == {'ENGLISH', 'Unknown'} and languages[0] == 'ENGLISH' and percent_of_English > thre:
+        return True
     
-#     return False
+    return False
 
 
 def process_as_iterative(feature_file_path, json_file_path):
@@ -257,15 +256,16 @@ def process_as_iterative(feature_file_path, json_file_path):
                     print(sep.join(ordered_fields))
                     fout.write('{}\n'.format(sep.join(ordered_fields)))
 
+
 def process_with_spark(input_file, output_file, num_parts):
     conf = pyspark.SparkConf().setAppName("BasicFeatureExtractor")
     sc = pyspark.SparkContext(conf=conf)
     spark = pyspark.sql.SparkSession(sc)
     texts_rdd = sc.textFile(input_file).repartition(num_parts)
     df = (texts_rdd.flatMap(lambda x: load_data_mapper(x))
-                           .map(lambda x: extract_fields(x[1], x[2], x[3]))
-                           .filter(lambda x: x)  # and is_English(x['Top_comment_text'])
-                           .toDF())
+                   .map(lambda x: extract_fields(x[1], x[2], x[3]))
+                   .filter(lambda x: is_English(x['Top_comment_text']))
+                   .toDF())
     df.repartition(1).write.csv(output_file, header=True, sep='\t')
 
 
