@@ -1,6 +1,8 @@
 # local package
 -e .
 
+
+
 # external requirements
 click
 Sphinx
@@ -8,3 +10,21 @@ coverage
 awscli
 flake8
 python-dotenv>=0.5.1
+sphinx-rtd-theme
+
+nltk==3.5
+ujson==4.0.2
+
+statsmodels==0.12.2
+textblob==0.15.3
+textstat==0.7.0
+pycld2==0.41
+pyspark==2.2.1
+little_mallet_wrapper
+runx
+numpy
+tqdm
+scikit-learn
+torch
+transformers
+tensorboardX
