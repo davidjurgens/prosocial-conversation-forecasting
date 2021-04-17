@@ -1,6 +1,6 @@
 import pandas as pd
 import datetime
-from genderperformr import GenderPerformr
+#from genderperformr import GenderPerformr
 from agreementr import Agreementr
 from politenessr import Politenessr
 from supportr import Supportr
@@ -11,6 +11,7 @@ from enchant.checker import SpellChecker
 from enchant.tokenize import get_tokenizer
 from nltk.tokenize import word_tokenize
 import nltk
+import time
 nltk.download('punkt')
 
 def clean_text(text):
@@ -27,10 +28,10 @@ def init():
 
 def extract_features(tlc):
     """extract features from the text
-​
+
     Args:
         tlc (str): all the attributes of a tlc
-​
+
     Returns:
         [dict]: a dictionary of features extracted
     """
@@ -42,22 +43,24 @@ def extract_features(tlc):
 
     # Extract time-based features
     def get_day_of_week(text):
-        return datetime.strptime(text, '%Y-%m-%d %H:%M:%S').weekday() + 1
+        return datetime.datetime.strptime(text, '%Y-%m-%d %H:%M:%S').weekday() + 1
 
     def get_day_of_month(text):
-        return datetime.strptime(text, '%Y-%m-%d %H:%M:%S').day
+        return datetime.datetime.strptime(text, '%Y-%m-%d %H:%M:%S').day
 
     def get_time_of_day(text):
-        return datetime.strptime(text, '%Y-%m-%d %H:%M:%S').hour
-    fields['Top_comment_day'] = get_day_of_month(str(tlc['Create_utc']))
-    fields['Top_comment_day_of_week'] = get_day_of_week(str(tlc['Create_utc']))
-    fields['Top_comment_hour'] = get_time_of_day(str(tlc['Create_utc']))
+        return datetime.datetime.strptime(text, '%Y-%m-%d %H:%M:%S').hour
+    time_local = time.localtime(tlc['created_utc'])
+    time_local = time.strftime("%Y-%m-%d %H:%M:%S", time_local)
+    fields['Top_comment_day'] = get_day_of_month(time_local)
+    fields['Top_comment_day_of_week'] = get_day_of_week(time_local)
+    fields['Top_comment_hour'] = get_time_of_day(time_local)
 
     # Extract gender value
-    gp = GenderPerformr()
-    probs, _ = gp.predict(tlc['author'])
+    #gp = GenderPerformr()
+    #probs, _ = gp.predict(tlc['author'])
     # Rescale it from [0,1] to [-1,1]
-    fields['Top_comment_author_gender_value'] = 2 * probs - 1
+    #fields['Top_comment_author_gender_value'] = 2 * probs - 1
 
     # Extract percentage of mispellings
     check = SpellChecker("en_US")
@@ -85,9 +88,9 @@ def extract_features(tlc):
     ar = Agreementr()
     pr = Politenessr()
     sr = Supportr()
-    fields['Top_comment_agreement_value'] = ar.predict([text])[0]
-    fields['Top_comment_politeness_value'] = pr.predict([text])[0]
-    fields['Top_comment_support_value'] = sr.predict([text])[0]
+    fields['Top_comment_agreement_value'] = float(ar.predict([text]))
+    fields['Top_comment_politeness_value'] = float(pr.predict([text]))
+    fields['Top_comment_support_value'] = float(sr.predict([text]))
 
     # Get toxicity scores
     KEY = pd.read_csv("whitelist-key.txt", names=['key'])['key'][0]
@@ -135,5 +138,6 @@ def main():
     data = ["what's the date today?"]
     features = map(extract_features, data)
     close(istream)
+
 
 main()
