@@ -93,7 +93,7 @@ def extract_features(tlc):
     fields['Top_comment_support_value'] = float(sr.predict([text]))
 
     # Get toxicity scores
-    KEY = pd.read_csv("whitelist-key.txt", names=['key'])['key'][0]
+    KEY = pd.read_csv("yourkey.txt", names=['key'])['key'][0]
     service = discovery.build('commentanalyzer', 'v1alpha1', developerKey=KEY)
 
     def get_results(request_id, response, exception):
