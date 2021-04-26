@@ -1,11 +1,13 @@
+import os
 import pandas as pd
 import datetime
-#from genderperformr import GenderPerformr
+from genderperformr import GenderPerformr
 from agreementr import Agreementr
 from politenessr import Politenessr
 from supportr import Supportr
 import enchant
 import requests
+import json
 from googleapiclient import discovery
 from enchant.checker import SpellChecker
 from enchant.tokenize import get_tokenizer
@@ -14,23 +16,18 @@ import nltk
 import time
 nltk.download('punkt')
 
+
 def clean_text(text):
     tokens = word_tokenize(text)
     words = [word for word in tokens if word.isalpha()]
     return ' '.join(words)
-
-def init():
-    """initialize the setup for feature extraction
-    """
-    # e.g. open a file or setup an api connection
-    return open("path/to/the/file", 'r'), pd.read_csv("path/to/the/file", sep='\t')
 
 
 def extract_features(tlc):
     """extract features from the text
 
     Args:
-        tlc (str): all the attributes of a tlc
+        tlc (dict[str]): all the attributes of a tlc
 
     Returns:
         [dict]: a dictionary of features extracted
@@ -57,10 +54,10 @@ def extract_features(tlc):
     fields['Top_comment_hour'] = get_time_of_day(time_local)
 
     # Extract gender value
-    #gp = GenderPerformr()
-    #probs, _ = gp.predict(tlc['author'])
+    gp = GenderPerformr()
+    probs, _ = gp.predict(tlc['author'])
     # Rescale it from [0,1] to [-1,1]
-    #fields['Top_comment_author_gender_value'] = 2 * probs - 1
+    fields['Top_comment_author_gender_value'] = 2 * probs - 1
 
     # Extract percentage of mispellings
     check = SpellChecker("en_US")
@@ -88,12 +85,12 @@ def extract_features(tlc):
     ar = Agreementr()
     pr = Politenessr()
     sr = Supportr()
-    fields['Top_comment_agreement_value'] = float(ar.predict([text]))
-    fields['Top_comment_politeness_value'] = float(pr.predict([text]))
-    fields['Top_comment_support_value'] = float(sr.predict([text]))
+    fields['Top_comment_agreement_value'] = 0.5*float(ar.predict([text]))-1.5
+    fields['Top_comment_politeness_value'] = 0.5*float(pr.predict([text]))-1.5
+    fields['Top_comment_support_value'] = 0.5*float(sr.predict([text]))-1.5
 
     # Get toxicity scores
-    KEY = pd.read_csv("yourkey.txt", names=['key'])['key'][0]
+    KEY = "yourkey.txt" # os.getenv("GOOGLE_API_KEY")
     service = discovery.build('commentanalyzer', 'v1alpha1', developerKey=KEY)
 
     def get_results(request_id, response, exception):
