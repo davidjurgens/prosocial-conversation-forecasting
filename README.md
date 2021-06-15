@@ -71,7 +71,7 @@ python src/features/lmw_infer.py
 ### Train and infer the models:
 Examples for training and inferring models are available [here](examples)
 
-You can download our model checkpoints [here](https://drive.google.com/file/d/1_o5h6ChNmwRygPXDJ2imUOyOqlgAsPf8/view?usp=sharing).
+You can download our model checkpoints [here](https://drive.google.com/file/d/1_o5h6ChNmwRygPXDJ2imUOyOqlgAsPf8/view?usp=sharing), and our processed datasets [here](https://drive.google.com/drive/folders/1f4Nq643htIEaRPQDu2X0U5e2QbxNZdAx?usp=sharing)
 
 - train an albert-based model to predict prosocial trajectory
 ```shell
